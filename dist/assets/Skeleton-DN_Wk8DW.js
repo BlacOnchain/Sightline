@@ -1,0 +1,1 @@
+import{n as e,t}from"./jsx-runtime-Bzw2jH9X.js";e();var n=t();function r({className:e=``,width:t,height:r}){return(0,n.jsx)(`div`,{style:{width:t,height:r},className:`animate-pulse bg-raised rounded-md border border-border/40 ${e}`,"aria-hidden":`true`})}export{r as t};
