@@ -1,0 +1,169 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny all access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isUser(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function isMember(wid) {
+      return isSignedIn() && (
+        (exists(/databases/$(database)/documents/workspaces/$(wid)) && 
+         get(/databases/$(database)/documents/workspaces/$(wid)).data.ownerId == request.auth.uid) ||
+        exists(/databases/$(database)/documents/workspaces/$(wid)/members/$(request.auth.uid))
+      );
+    }
+
+    function getMemberRole(wid) {
+      return get(/databases/$(database)/documents/workspaces/$(wid)/members/$(request.auth.uid)).data.role;
+    }
+
+    function isOwner(wid) {
+      return isSignedIn() && (
+        (exists(/databases/$(database)/documents/workspaces/$(wid)) && 
+         get(/databases/$(database)/documents/workspaces/$(wid)).data.ownerId == request.auth.uid) ||
+        (exists(/databases/$(database)/documents/workspaces/$(wid)/members/$(request.auth.uid)) && 
+         getMemberRole(wid) == 'owner')
+      );
+    }
+
+    function isAnalyst(wid) {
+      return isOwner(wid) || (
+        exists(/databases/$(database)/documents/workspaces/$(wid)/members/$(request.auth.uid)) &&
+        getMemberRole(wid) == 'analyst'
+      );
+    }
+
+    // CollectionGroup rules
+    match /{path=**}/members/{uid} {
+      allow read: if isSignedIn() && request.auth.uid == uid;
+    }
+
+    match /{path=**}/invites/{emailLower} {
+      allow read, delete: if isSignedIn() && request.auth.token.email != null && request.auth.token.email.lower() == emailLower;
+    }
+
+    // Users collection
+    match /users/{uid} {
+      allow read: if isUser(uid);
+      allow create, update: if isUser(uid) &&
+        request.resource.data.email is string &&
+        request.resource.data.email.size() <= 200;
+      allow delete: if false;
+    }
+
+    // Workspaces collection
+    match /workspaces/{wid} {
+      allow read: if isSignedIn() && (
+        (resource != null && resource.data.ownerId == request.auth.uid) ||
+        isMember(wid)
+      );
+      allow create: if isSignedIn() &&
+        request.resource.data.ownerId == request.auth.uid &&
+        request.resource.data.name is string &&
+        request.resource.data.name.size() > 0 &&
+        request.resource.data.name.size() <= 100;
+      allow update: if isOwner(wid) &&
+        request.resource.data.ownerId == resource.data.ownerId &&
+        request.resource.data.name is string &&
+        request.resource.data.name.size() > 0 &&
+        request.resource.data.name.size() <= 100;
+      allow delete: if isOwner(wid);
+
+      // Members subcollection
+      match /members/{uid} {
+        allow read: if isMember(wid);
+        allow create: if isSignedIn() && (
+          isOwner(wid) ||
+          (request.auth.uid == uid && 
+           get(/databases/$(database)/documents/workspaces/$(wid)).data.ownerId == request.auth.uid) ||
+          (request.auth.uid == uid && 
+           request.auth.token.email != null &&
+           exists(/databases/$(database)/documents/workspaces/$(wid)/invites/$(request.auth.token.email.lower())))
+        ) &&
+        request.resource.data.role in ['owner', 'analyst', 'viewer'];
+        allow update: if isOwner(wid) &&
+          request.resource.data.role in ['owner', 'analyst', 'viewer'];
+        allow delete: if isOwner(wid) || (isMember(wid) && request.auth.uid == uid);
+      }
+
+      // Invites subcollection
+      match /invites/{emailLower} {
+        allow read: if isOwner(wid) || (isSignedIn() && request.auth.token.email != null && request.auth.token.email.lower() == emailLower);
+        allow create, update: if isOwner(wid) &&
+          request.resource.data.email is string &&
+          request.resource.data.email.size() <= 200 &&
+          request.resource.data.role in ['analyst', 'viewer'];
+        allow delete: if isOwner(wid) || (isSignedIn() && request.auth.token.email != null && request.auth.token.email.lower() == emailLower);
+      }
+
+      // Brands subcollection
+      match /brands/{bid} {
+        allow read: if isMember(wid);
+        allow create: if isAnalyst(wid) &&
+          request.resource.data.name is string &&
+          request.resource.data.name.size() > 0 &&
+          request.resource.data.name.size() <= 100 &&
+          request.resource.data.kind in ['own', 'competitor'] &&
+          request.resource.data.aliases is list &&
+          request.resource.data.aliases.size() <= 20 &&
+          (!('website' in request.resource.data) || (request.resource.data.website is string && request.resource.data.website.size() <= 300)) &&
+          (!('isSample' in request.resource.data) || request.resource.data.isSample is bool);
+        allow update: if isAnalyst(wid) &&
+          request.resource.data.name is string &&
+          request.resource.data.name.size() > 0 &&
+          request.resource.data.name.size() <= 100 &&
+          request.resource.data.kind in ['own', 'competitor'] &&
+          request.resource.data.aliases is list &&
+          request.resource.data.aliases.size() <= 20 &&
+          (!('website' in request.resource.data) || (request.resource.data.website is string && request.resource.data.website.size() <= 300)) &&
+          (!('isSample' in request.resource.data) || request.resource.data.isSample is bool);
+        allow delete: if isAnalyst(wid);
+      }
+
+      // Queries subcollection
+      match /queries/{qid} {
+        allow read: if isMember(wid);
+        allow create: if isAnalyst(wid) &&
+          request.resource.data.text is string &&
+          request.resource.data.text.size() > 0 &&
+          request.resource.data.text.size() <= 500 &&
+          request.resource.data.frequency in ['daily', 'weekly', 'manual'] &&
+          request.resource.data.active is bool &&
+          (!('category' in request.resource.data) || (request.resource.data.category is string && request.resource.data.category.size() <= 100)) &&
+          (!('isSample' in request.resource.data) || request.resource.data.isSample is bool);
+        allow update: if isAnalyst(wid) &&
+          request.resource.data.text is string &&
+          request.resource.data.text.size() > 0 &&
+          request.resource.data.text.size() <= 500 &&
+          request.resource.data.frequency in ['daily', 'weekly', 'manual'] &&
+          request.resource.data.active is bool &&
+          (!('category' in request.resource.data) || (request.resource.data.category is string && request.resource.data.category.size() <= 100)) &&
+          (!('isSample' in request.resource.data) || request.resource.data.isSample is bool);
+        allow delete: if isAnalyst(wid);
+      }
+
+      // Runs subcollection - Server-only writes
+      match /runs/{rid} {
+        allow read: if isMember(wid);
+        allow write: if false; // Only server (Firebase Admin SDK) can write runs
+      }
+
+      // Reports subcollection - Server-only writes
+      match /reports/{repId} {
+        allow read: if isMember(wid);
+        allow write: if false; // Only server (Firebase Admin SDK) can write reports
+      }
+    }
+  }
+}

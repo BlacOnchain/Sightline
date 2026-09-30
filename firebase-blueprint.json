@@ -1,0 +1,128 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile representation in Sightline",
+      "type": "object",
+      "properties": {
+        "displayName": { "type": "string", "maxLength": 100 },
+        "email": { "type": "string", "maxLength": 200 },
+        "photoURL": { "type": "string", "maxLength": 500 },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["email", "createdAt"]
+    },
+    "Workspace": {
+      "title": "Workspace",
+      "description": "Brand tracking workspace container",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "ownerId": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["name", "ownerId", "createdAt"]
+    },
+    "Member": {
+      "title": "Member",
+      "description": "Workspace collaborator membership role",
+      "type": "object",
+      "properties": {
+        "role": { "type": "string", "enum": ["owner", "analyst", "viewer"] },
+        "addedAt": { "type": "string" }
+      },
+      "required": ["role", "addedAt"]
+    },
+    "Brand": {
+      "title": "Brand",
+      "description": "Tracked brand or competitor in workspace",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "aliases": { "type": "array" },
+        "website": { "type": "string", "maxLength": 300 },
+        "kind": { "type": "string", "enum": ["own", "competitor"] },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["name", "aliases", "kind", "createdAt"]
+    },
+    "Query": {
+      "title": "Query",
+      "description": "Search-style query tracked against AI answers",
+      "type": "object",
+      "properties": {
+        "text": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "category": { "type": "string", "maxLength": 100 },
+        "frequency": { "type": "string", "enum": ["daily", "weekly", "manual"] },
+        "active": { "type": "boolean" },
+        "lastRunAt": { "type": "string" },
+        "nextRunAt": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["text", "category", "frequency", "active", "createdAt"]
+    },
+    "Run": {
+      "title": "Run",
+      "description": "Execution record of an AI answer search grounding check",
+      "type": "object",
+      "properties": {
+        "queryId": { "type": "string", "maxLength": 128 },
+        "queryText": { "type": "string", "maxLength": 500 },
+        "model": { "type": "string", "maxLength": 100 },
+        "status": { "type": "string", "enum": ["completed", "failed"] },
+        "startedAt": { "type": "string" },
+        "answerText": { "type": "string" },
+        "mentions": { "type": "array" },
+        "sources": { "type": "array" },
+        "error": { "type": "string" }
+      },
+      "required": ["queryId", "queryText", "model", "status", "startedAt"]
+    },
+    "Report": {
+      "title": "Report",
+      "description": "Synthesized visibility and share of voice report over a period",
+      "type": "object",
+      "properties": {
+        "periodStart": { "type": "string" },
+        "periodEnd": { "type": "string" },
+        "visibilityScore": { "type": "number" },
+        "avgPosition": { "type": "number" },
+        "shareOfVoice": { "type": "array" },
+        "topSources": { "type": "array" },
+        "runCount": { "type": "number" },
+        "generatedAt": { "type": "string" }
+      },
+      "required": ["periodStart", "periodEnd", "visibilityScore", "runCount", "generatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{uid}": {
+      "schema": "User",
+      "description": "User profile records"
+    },
+    "/workspaces/{wid}": {
+      "schema": "Workspace",
+      "description": "Workspace containers"
+    },
+    "/workspaces/{wid}/members/{uid}": {
+      "schema": "Member",
+      "description": "Workspace member access records"
+    },
+    "/workspaces/{wid}/brands/{bid}": {
+      "schema": "Brand",
+      "description": "Tracked brands and competitors"
+    },
+    "/workspaces/{wid}/queries/{qid}": {
+      "schema": "Query",
+      "description": "Tracked prompt queries"
+    },
+    "/workspaces/{wid}/runs/{rid}": {
+      "schema": "Run",
+      "description": "Grounding runs recorded only by server"
+    },
+    "/workspaces/{wid}/reports/{repId}": {
+      "schema": "Report",
+      "description": "Periodic reports recorded only by server"
+    }
+  }
+}

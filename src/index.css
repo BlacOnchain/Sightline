@@ -1,0 +1,140 @@
+@import "tailwindcss";
+
+/* Single Sage Mist Palette */
+:root {
+  --color-bg: #D9E2D5;
+  --color-surface: #E5ECE1;
+  --color-raised: #CDD8C8;
+  --color-border: #AFBFAA;
+  --color-text: #18271F;
+  --color-muted: #4A5D52;
+  --color-accent: #1F4A3B;
+  --color-accent-hover: #16382C;
+  --color-accent-subtle: rgba(31, 74, 59, 0.12);
+  --color-clay: #A3441C;
+  --color-clay-subtle: rgba(163, 68, 28, 0.12);
+  --color-highlight: #F0D874;
+  --color-highlight-text: #18271F;
+  --color-sheet: #EADFC8;
+  --color-success: #1F4A3B;
+  --color-success-subtle: rgba(31, 74, 59, 0.12);
+  --color-warning: #8A5F12;
+  --color-warning-subtle: rgba(138, 95, 18, 0.12);
+  --color-danger: #96382C;
+  --color-danger-subtle: rgba(150, 56, 44, 0.12);
+}
+
+@theme {
+  --color-bg: var(--color-bg);
+  --color-surface: var(--color-surface);
+  --color-raised: var(--color-raised);
+  --color-border: var(--color-border);
+  --color-text: var(--color-text);
+  --color-muted: var(--color-muted);
+  --color-accent: var(--color-accent);
+  --color-accent-hover: var(--color-accent-hover);
+  --color-accent-subtle: var(--color-accent-subtle);
+  --color-clay: var(--color-clay);
+  --color-clay-subtle: var(--color-clay-subtle);
+  --color-highlight: var(--color-highlight);
+  --color-highlight-text: var(--color-highlight-text);
+  --color-sheet: var(--color-sheet);
+  --color-success: var(--color-success);
+  --color-success-subtle: var(--color-success-subtle);
+  --color-warning: var(--color-warning);
+  --color-warning-subtle: var(--color-warning-subtle);
+  --color-danger: var(--color-danger);
+  --color-danger-subtle: var(--color-danger-subtle);
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: 'Hanken Grotesk', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  letter-spacing: -0.01em;
+}
+
+@media (min-width: 768px) {
+  body {
+    font-size: 17px;
+    line-height: 1.6;
+  }
+}
+
+::selection {
+  background-color: rgba(31, 74, 59, 0.22);
+  color: var(--color-text);
+}
+
+.font-display {
+  font-family: 'Newsreader', Georgia, 'Times New Roman', serif;
+  font-feature-settings: "liga" 1, "dlig" 1;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Focus rings: 2px accent with 2px offset */
+*:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Pen marker highlight sweep animation */
+.marker-highlight {
+  background-image: linear-gradient(to right, var(--color-highlight), var(--color-highlight));
+  background-repeat: no-repeat;
+  background-size: 100% 88%;
+  background-position: 0 88%;
+  padding: 0.1em 0.25em;
+  border-radius: 2px;
+  color: var(--color-highlight-text);
+  transition: background-size 500ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marker-highlight {
+    transition: none;
+  }
+}
+
+/* Custom scrollbar in sage palette */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-muted);
+}
+
+/* Autofill styling in theme palette */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-text-fill-color: var(--color-text);
+  -webkit-box-shadow: 0 0 0px 1000px var(--color-surface) inset;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Print stylesheet */
+@media print {
+  body {
+    background-color: white !important;
+    color: black !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+}

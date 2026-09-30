@@ -1,0 +1,6 @@
+{
+  "name": "Aduke",
+  "description": "Professional web application that tracks brand references and evaluations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
