@@ -34,8 +34,26 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
         setRegion(detected);
       },
       (err) => {
-        console.error('Geolocation error:', err);
-        setError(err.message);
+        let errorMessage = 'Unknown location error';
+        if (err && typeof err === 'object') {
+          if ('message' in err && typeof (err as any).message === 'string') {
+            errorMessage = (err as any).message;
+          } else if ('code' in err) {
+            errorMessage = `Geolocation error code: ${(err as any).code}`;
+          }
+        }
+        // Check if error is due to permissions policy
+        const isPermissionError = 
+          errorMessage.toLowerCase().includes('permissions policy') || 
+          errorMessage.toLowerCase().includes('permission denied');
+
+        if (isPermissionError) {
+          console.info('Geolocation access restricted by policy, defaulting to Global.');
+        } else {
+          console.error('Geolocation failed:', errorMessage);
+        }
+        
+        setError(errorMessage);
         setRegion('Global'); // Default fallback
       }
     );

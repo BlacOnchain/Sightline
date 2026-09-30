@@ -43,7 +43,9 @@ function RouteLoadingFallback() {
 
 export default function App() {
   const isGitHubPages = window.location.hostname.includes('github.io');
-  const Router = isGitHubPages ? HashRouter : BrowserRouter;
+  const RouterWrapper = ({ children }: { children: React.ReactNode }) => {
+    return isGitHubPages ? <HashRouter>{children}</HashRouter> : <BrowserRouter>{children}</BrowserRouter>;
+  };
 
   return (
     <ThemeProvider>
@@ -51,7 +53,7 @@ export default function App() {
         <LocationProvider>
           <LocaleProvider>
             <AuthProvider>
-              <Router>
+              <RouterWrapper>
                 <Suspense fallback={<RouteLoadingFallback />}>
                   <Routes>
                   {/* Public Website Routes */}
@@ -143,7 +145,7 @@ export default function App() {
               </Routes>
             </Suspense>
             <CookieConsent />
-            </Router>
+            </RouterWrapper>
           </AuthProvider>
         </LocaleProvider>
         </LocationProvider>
