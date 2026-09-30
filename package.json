@@ -9,7 +9,7 @@
     "build": "vite build",
     "start": "tsx server.ts",
     "preview": "vite preview",
-    "clean": "rm -rf dist server.js",
+    "clean": "rd /s /q dist",
     "test": "tsx --test tests/**/*.test.ts",
     "lint": "tsc --noEmit"
   },
