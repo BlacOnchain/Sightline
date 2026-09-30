@@ -7,7 +7,8 @@ import { Button } from '../components/ui/Button';
 import { SamplePaperSheet } from '../components/marketing/SamplePaperSheet';
 import { Faq } from '../components/marketing/Faq';
 import { NotebookIllustration, CalendarFlagIllustration, PrintedPageIllustration } from '../components/marketing/MarketingIllustrations';
-import { ArrowRight, Menu, X } from 'lucide-react';
+import { ArrowRight, Menu, X, Globe } from 'lucide-react';
+import { useLocale, TargetMarket } from '../utils/Locales';
 
 const SampleBriefPreview = lazy(() =>
   import('../components/marketing/SampleBriefPreview').then((m) => ({
@@ -23,6 +24,10 @@ const fadeUpMotion = {
 };
 
 const FAQ_ITEMS = [
+  {
+    question: 'Does Sightline work for Nigerian brands?',
+    answer: 'Yes. Sightline tracks brand mentions in AI-generated answers globally. You can add your local brand name, common misspellings, and social handles to ensure you capture every mention regardless of the search origin.',
+  },
   {
     question: 'How does it know a brand was mentioned?',
     answer: 'Matches your brand name, handles and aliases, ignoring capital letters. It does not use guessing or estimation, so the evaluation is completely deterministic.',
@@ -47,9 +52,11 @@ const FAQ_ITEMS = [
 
 export function LandingPage() {
   const { user } = useAuth();
+  const { market, setMarket, settings } = useLocale();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const destinationRoute = user ? '/overview' : '/sign-in';
+  const exampleQuery = market === 'Nigeria' ? 'the best payment gateway in Nigeria' : 'the best global payment gateway';
 
   return (
     <div className="min-h-screen bg-bg text-text selection:bg-accent/22 flex flex-col justify-between text-[16px] sm:text-[17px] leading-[1.6]">
@@ -73,6 +80,19 @@ export function LandingPage() {
                 FAQ
               </a>
             </nav>
+
+            <div className="flex items-center gap-2 border-l border-border pl-4">
+              <Globe className="w-3.5 h-3.5 text-muted" />
+              <select
+                value={market}
+                onChange={(e) => setMarket(e.target.value as TargetMarket)}
+                className="bg-surface hover:bg-raised border border-border rounded px-2 py-1 text-xs text-text font-medium focus:outline-none focus:ring-1 focus:ring-accent cursor-pointer transition-colors"
+                title="Select Target Market"
+              >
+                <option value="Nigeria">🇳🇬 Nigeria</option>
+                <option value="Global">🌐 Global</option>
+              </select>
+            </div>
 
             <Link to={destinationRoute}>
               <Button variant="primary" size="sm">
@@ -117,7 +137,21 @@ export function LandingPage() {
             >
               FAQ
             </a>
-            <div className="pt-2 border-t border-border">
+            <div className="flex items-center justify-between px-3 py-2 border-t border-border mt-2">
+              <span className="text-xs text-muted">Target Market:</span>
+              <select
+                value={market}
+                onChange={(e) => {
+                  setMarket(e.target.value as TargetMarket);
+                  setMobileMenuOpen(false);
+                }}
+                className="bg-surface hover:bg-raised border border-border rounded px-2 py-1 text-xs text-text font-medium focus:outline-none focus:ring-1 focus:ring-accent cursor-pointer transition-colors"
+              >
+                <option value="Nigeria">🇳🇬 Nigeria</option>
+                <option value="Global">🌐 Global</option>
+              </select>
+            </div>
+            <div className="pt-2">
               <Link to={destinationRoute} onClick={() => setMobileMenuOpen(false)}>
                 <Button variant="primary" size="sm" className="w-full">
                   Open Sightline
@@ -186,7 +220,7 @@ export function LandingPage() {
               </div>
               <div className="md:col-span-8">
                 <p className="text-muted leading-[1.6]">
-                  List what customers might ask an AI, like the best coffee subscription for beginners. Add the brand you manage and its competitors.
+                  List what customers might ask an AI, like {exampleQuery}. Add the brand you manage and its competitors.
                 </p>
               </div>
             </motion.div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../ui/Button';
@@ -6,12 +6,13 @@ import { Input } from '../ui/Input';
 import { Logo } from '../ui/Logo';
 import { useToast } from '../ui/Toast';
 import { createBrand, createQuery } from '../../lib/db';
-import { Plus, X, ArrowRight, ArrowLeft, Check, Sparkles } from 'lucide-react';
+import { Plus, X, ArrowRight, ArrowLeft, Check, Sparkles, Globe } from 'lucide-react';
 import {
   DeskNameplateIllustration,
   FlagsPlantedIllustration,
   NotebookIllustration,
 } from '../marketing/MarketingIllustrations';
+import { useLocale, TargetMarket } from '../../utils/Locales';
 
 const SUGGESTED_QUERIES = [
   'What is the best payment gateway in Nigeria for developers?',
@@ -33,6 +34,7 @@ interface CompetitorEntry {
 export function OnboardingFlow() {
   const { createWorkspaceAndSelect } = useAuth();
   const { addToast } = useToast();
+  const { market, setMarket, settings } = useLocale();
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [submitting, setSubmitting] = useState(false);
@@ -53,13 +55,17 @@ export function OnboardingFlow() {
   const [compWebsiteInput, setCompWebsiteInput] = useState('');
 
   // Step 3: Starter Queries
-  const [queries, setQueries] = useState<string[]>([
-    'What is the best payment gateway in Nigeria for developers?',
-    'Which payment platform supports automated recurring billing in Lagos?',
-    'What are the top-rated business banking apps for small merchants in Nigeria?',
-    'Is Paystack reliable for collecting card payments?',
-  ]);
+  const [queries, setQueries] = useState<string[]>([]);
   const [customQueryInput, setCustomQueryInput] = useState('');
+
+  // Dynamically reset values based on region settings
+  useEffect(() => {
+    setWorkspaceName(market === 'Nigeria' ? 'Paystack Workspace' : 'Stripe Workspace');
+    setOwnBrandName(settings.defaultOwnBrand);
+    setOwnBrandWebsite(settings.defaultOwnWebsite);
+    setOwnBrandAliases(settings.defaultOwnAliases);
+    setQueries(settings.suggestedQueries.slice(0, 4));
+  }, [market, settings]);
 
   // Add own alias tag
   const handleAddOwnAlias = (e: React.KeyboardEvent | React.MouseEvent) => {
@@ -334,6 +340,23 @@ export function OnboardingFlow() {
               autoFocus
             />
 
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-text flex items-center gap-1.5">
+                <Globe className="w-3.5 h-3.5 text-muted" /> Target Market Region
+              </label>
+              <select
+                value={market}
+                onChange={(e) => setMarket(e.target.value as TargetMarket)}
+                className="w-full bg-surface hover:bg-raised border border-border rounded-md px-3 py-2 text-xs text-text font-medium focus:outline-none focus:ring-1 focus:ring-accent cursor-pointer transition-colors"
+              >
+                <option value="Nigeria">🇳🇬 Nigeria (Local brands: Paystack, Flutterwave, Moniepoint)</option>
+                <option value="Global">🌐 Global (International brands: Stripe, PayPal, Adyen)</option>
+              </select>
+              <span className="block text-[11px] text-muted">
+                Switches the sample data and query suggestions dynamically to align with your focus region.
+              </span>
+            </div>
+
             <div className="pt-4 flex justify-end">
               <Button
                 variant="primary"
@@ -512,7 +535,7 @@ export function OnboardingFlow() {
                 Click to add suggested queries:
               </span>
               <div className="flex flex-wrap gap-1.5">
-                {SUGGESTED_QUERIES.map((sug) => {
+                {settings.suggestedQueries.map((sug) => {
                   const isSelected = queries.includes(sug);
                   return (
                     <button

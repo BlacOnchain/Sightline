@@ -4,7 +4,7 @@
  */
 
 import React, { Suspense, lazy } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './lib/theme';
 import { ToastProvider } from './components/ui/Toast';
 import { AuthProvider } from './contexts/AuthContext';
@@ -12,6 +12,8 @@ import { ProtectedRoute } from './components/layout/ProtectedRoute';
 import { AppShell } from './components/layout/AppShell';
 import { Logo } from './components/ui/Logo';
 import { CookieConsent } from './components/ui/CookieConsent';
+import { LocaleProvider } from './utils/Locales';
+import { LocationProvider } from './utils/LocationContext';
 
 // Code-split routes for optimal performance
 const LandingPage = lazy(() => import('./pages/LandingPage').then((m) => ({ default: m.LandingPage })));
@@ -40,24 +42,29 @@ function RouteLoadingFallback() {
 }
 
 export default function App() {
+  const isGitHubPages = window.location.hostname.includes('github.io');
+  const Router = isGitHubPages ? HashRouter : BrowserRouter;
+
   return (
     <ThemeProvider>
       <ToastProvider>
-        <AuthProvider>
-          <BrowserRouter>
-            <Suspense fallback={<RouteLoadingFallback />}>
-              <Routes>
-                {/* Public Website Routes */}
-                <Route path="/" element={<LandingPage />} />
-                <Route path="/method" element={<MethodPage />} />
-                <Route path="/privacy" element={<PrivacyPage />} />
-                <Route path="/terms" element={<TermsPage />} />
-                <Route path="/sign-in" element={<SignInPage />} />
-                <Route path="/404" element={<NotFoundPage />} />
+        <LocationProvider>
+          <LocaleProvider>
+            <AuthProvider>
+              <Router>
+                <Suspense fallback={<RouteLoadingFallback />}>
+                  <Routes>
+                  {/* Public Website Routes */}
+                  <Route path="/" element={<LandingPage />} />
+                  <Route path="/method" element={<MethodPage />} />
+                  <Route path="/privacy" element={<PrivacyPage />} />
+                  <Route path="/terms" element={<TermsPage />} />
+                  <Route path="/sign-in" element={<SignInPage />} />
+                  <Route path="/404" element={<NotFoundPage />} />
 
-                {/* Convenient Aliases */}
-                <Route path="/dashboard" element={<Navigate to="/overview" replace />} />
-                <Route path="/app" element={<Navigate to="/overview" replace />} />
+                  {/* Convenient Aliases */}
+                  <Route path="/dashboard" element={<Navigate to="/overview" replace />} />
+                  <Route path="/app" element={<Navigate to="/overview" replace />} />
 
                 {/* Protected Workspace Application Routes */}
                 <Route
@@ -136,8 +143,10 @@ export default function App() {
               </Routes>
             </Suspense>
             <CookieConsent />
-          </BrowserRouter>
-        </AuthProvider>
+            </Router>
+          </AuthProvider>
+        </LocaleProvider>
+        </LocationProvider>
       </ToastProvider>
     </ThemeProvider>
   );
